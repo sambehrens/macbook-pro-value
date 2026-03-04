@@ -2,6 +2,8 @@
 
 A static single-page website visualising MacBook Pro starting prices and performance from 2006 to 2026, built with Chart.js.
 
+**[sambehrens.github.io/macbook-pro-value](https://sambehrens.github.io/macbook-pro-value/)**
+
 ## Usage
 
 Open `index.html` directly in a browser. No build step or server required.
