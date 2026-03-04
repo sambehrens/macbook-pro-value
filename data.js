@@ -45,11 +45,11 @@ const ram = {
 //            M3 (2023) = 8-core; M4 (2024) = 10-core; M5 (2025) = 10-core.
 // 15"/16" notes: 2-core through 2010; 4-core Sandy Bridge from 2011; 6-core Coffee Lake from 2018;
 //               M1 Pro (2021) = 10-core; M3 Pro (2023) = 12-core; M4 Pro (2024) = 14-core;
-//               M5 Pro (2026) = 15-core.
+//               M5 Pro (2026) = 18-core (6 super + 12 performance, per apple.com/macbook-pro/specs/).
 const cores = {
   //           06    07    08   09   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26
   small: [null, null, null,  2,   2,   2,   2,   2,   2,   2,   2,   2,   4,   4,   8,   8,   8,   8,  10,  10,  10],
-  large: [   2,    2,   2,   2,   2,   4,   4,   4,   4,   4,   4,   4,   6,   6,   6,  10,  10,  12,  14,  14,  15],
+  large: [   2,    2,   2,   2,   2,   4,   4,   4,   4,   4,   4,   4,   6,   6,   6,  10,  10,  12,  14,  14,  18],
 };
 
 // Chip/generation name shown in tooltips
