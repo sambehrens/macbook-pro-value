@@ -141,11 +141,13 @@
         <button class="btn" data-mode="score_single">Single-Core Score</button>
         <button class="btn" data-mode="score_multi">Multi-Core Score</button>
         <button class="btn" data-mode="ram_gb">Base RAM</button>
+        <button class="btn" data-mode="cores_base">Base Cores</button>
       </div>
       <div class="btn-group">
         <button class="btn" data-mode="single">Single-Core Value</button>
         <button class="btn" data-mode="multi">Multi-Core Value</button>
         <button class="btn" data-mode="ram">RAM Value</button>
+        <button class="btn" data-mode="cores_value">Core Value</button>
       </div>
     </div>
     <div class="control-row">
@@ -267,6 +269,30 @@
         tipFormat: val => val + ' GB',
         compute: (_prices, _bench, ramGb) => [...ramGb],
       },
+      cores_base: {
+        title: 'MacBook Pro Base CPU Core Count by Year',
+        yLabel: 'CPU Cores',
+        note: 'Physical CPU cores in the base configuration. Intel era uses physical core count; Apple Silicon counts all cores (performance + efficiency).',
+        usesCurrency: false,
+        yFormat: val => val + ' cores',
+        tipFormat: val => val + (val === 1 ? ' core' : ' cores'),
+        compute: (_prices, _bench, _ramGb, coresData) => [...coresData],
+      },
+      cores_value: {
+        title: 'MacBook Pro Core Value by Year',
+        yLabel: 'CPU Cores per $1,000',
+        note: 'CPU core count ÷ price × $1,000 — higher is better value.',
+        usesCurrency: true,
+        yFormat: val => +val.toFixed(2) + ' cores',
+        tipFormat: val => +val.toFixed(2) + ' cores per $1k',
+        tipExtra: (dsIdx, idx) => {
+          const c = dsIdx === 0 ? cores.small : cores.large;
+          return c[idx] != null ? ` — ${c[idx]} cores` : '';
+        },
+        compute: (prices, _bench, _ramGb, coresData) => prices.map((p, i) =>
+          p == null || coresData[i] == null ? null : parseFloat((coresData[i] / p * 1000).toFixed(3))
+        ),
+      },
     };
 
     let currentMode = 'price';
@@ -364,8 +390,8 @@
       const m = modes[mode];
       const adjSmall = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(smallModel) : smallModel;
       const adjLarge = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(largeModel) : largeModel;
-      chart.data.datasets[0].data = m.compute(adjSmall, benchmarks.small, ram.small);
-      chart.data.datasets[1].data = m.compute(adjLarge, benchmarks.large, ram.large);
+      chart.data.datasets[0].data = m.compute(adjSmall, benchmarks.small, ram.small, cores.small);
+      chart.data.datasets[1].data = m.compute(adjLarge, benchmarks.large, ram.large, cores.large);
       const inflationSuffix = (inflationAdjusted && m.usesCurrency) ? ' (2026 dollars)' : '';
       chart.options.plugins.title.text = m.title + inflationSuffix;
       chart.options.scales.y.title.text = m.yLabel;
