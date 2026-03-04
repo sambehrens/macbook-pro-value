@@ -97,6 +97,40 @@
       color: #1d1d1f;
       text-decoration: underline;
     }
+    .inflation-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6e6e73;
+      cursor: pointer;
+      user-select: none;
+    }
+    .inflation-toggle input { display: none; }
+    .toggle-track {
+      width: 36px;
+      height: 20px;
+      background: #c7c7cc;
+      border-radius: 10px;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      transition: left 0.2s;
+    }
+    .inflation-toggle input:checked + .toggle-track { background: #0071e3; }
+    .inflation-toggle input:checked + .toggle-track::after { left: 18px; }
   </style>
 </head>
 <body>
@@ -113,6 +147,13 @@
         <button class="btn" data-mode="ram">RAM Value</button>
       </div>
     </div>
+    <div class="control-row">
+      <label class="inflation-toggle">
+        <input type="checkbox" id="inflationToggle">
+        <span class="toggle-track"></span>
+        Adjust for inflation (2026 dollars)
+      </label>
+    </div>
     <p class="note" id="note"></p>
   </div>
   <div class="chart-container">
@@ -125,16 +166,38 @@
       <li><a href="https://browser.geekbench.com/mac-benchmarks" target="_blank">Geekbench Mac Benchmarks — GB6 scores (Apple Silicon)</a></li>
       <li><a href="https://browser.geekbench.com/v6/cpu/search" target="_blank">Geekbench Browser — GB6 scores (Intel 2015–2019)</a></li>
       <li><a href="https://en.wikipedia.org/wiki/MacBook_Pro" target="_blank">Wikipedia — MacBook Pro</a></li>
+      <li><a href="https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator/consumer-price-index-1913-" target="_blank">Federal Reserve Bank of Minneapolis — CPI 1913–present</a></li>
+      <li><a href="https://www.bls.gov/news.release/cpi.nr0.htm" target="_blank">U.S. Bureau of Labor Statistics — CPI News Release</a></li>
     </ul>
   </section>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="data.js"></script>
   <script>
+    // Annual average CPI-U (1982–84 = 100). Source: Federal Reserve Bank of Minneapolis / BLS.
+    // 2026 = January 2026 value (325.252) per BLS news release.
+    const cpi = {
+      2006: 201.6, 2007: 207.3, 2008: 215.3, 2009: 214.5, 2010: 218.1,
+      2011: 224.9, 2012: 229.6, 2013: 233.0, 2014: 236.7, 2015: 237.0,
+      2016: 240.0, 2017: 245.1, 2018: 251.1, 2019: 255.7, 2020: 258.8,
+      2021: 271.0, 2022: 292.7, 2023: 304.7, 2024: 313.7, 2025: 321.9,
+      2026: 325.3,
+    };
+    const CPI_REF = cpi[2026];
+
+    let inflationAdjusted = false;
+
+    function adjustedPrices(nominal) {
+      return nominal.map((p, i) =>
+        p == null ? null : Math.round(p * CPI_REF / cpi[years[i]])
+      );
+    }
+
     const modes = {
       price: {
         title: 'MacBook Pro Starting Price by Year',
         yLabel: 'Starting Price (USD)',
         note: '',
+        usesCurrency: true,
         yFormat: val => '$' + val.toLocaleString(),
         tipFormat: val => '$' + val.toLocaleString(),
         compute: (prices) => [...prices],
@@ -143,6 +206,7 @@
         title: 'MacBook Pro Single-Core Score by Year',
         yLabel: 'GB6 Single-Core Score',
         note: 'Raw Geekbench 6 single-core score. Pre-2015 and 2016 scores are estimated.',
+        usesCurrency: false,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts',
         compute: (_prices, bench) => [...bench.single],
@@ -151,6 +215,7 @@
         title: 'MacBook Pro Multi-Core Score by Year',
         yLabel: 'GB6 Multi-Core Score',
         note: 'Raw Geekbench 6 multi-core score. Pre-2015 and 2016 scores are estimated.',
+        usesCurrency: false,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts',
         compute: (_prices, bench) => [...bench.multi],
@@ -159,6 +224,7 @@
         title: 'MacBook Pro Single-Core Value by Year',
         yLabel: 'GB6 Single-Core Points per $1,000',
         note: 'Geekbench 6 single-core score ÷ price × $1,000 — higher is better value. Pre-2015 and 2016 scores are estimated.',
+        usesCurrency: true,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts per $1k',
         compute: (prices, bench) => prices.map((p, i) =>
@@ -169,6 +235,7 @@
         title: 'MacBook Pro Multi-Core Value by Year',
         yLabel: 'GB6 Multi-Core Points per $1,000',
         note: 'Geekbench 6 multi-core score ÷ price × $1,000 — higher is better value. Pre-2015 and 2016 scores are estimated.',
+        usesCurrency: true,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts per $1k',
         compute: (prices, bench) => prices.map((p, i) =>
@@ -179,6 +246,7 @@
         title: 'MacBook Pro RAM Value by Year',
         yLabel: 'GB of RAM per $1,000',
         note: 'Base RAM (GB) ÷ price × $1,000 — higher is better value.',
+        usesCurrency: true,
         yFormat: val => +val.toFixed(1) + ' GB',
         tipFormat: val => +val.toFixed(2) + ' GB per $1k',
         compute: (prices, _bench, ramGb) => prices.map((p, i) =>
@@ -278,9 +346,12 @@
     function setMode(mode) {
       currentMode = mode;
       const m = modes[mode];
-      chart.data.datasets[0].data = m.compute(smallModel, benchmarks.small, ram.small);
-      chart.data.datasets[1].data = m.compute(largeModel, benchmarks.large, ram.large);
-      chart.options.plugins.title.text = m.title;
+      const adjSmall = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(smallModel) : smallModel;
+      const adjLarge = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(largeModel) : largeModel;
+      chart.data.datasets[0].data = m.compute(adjSmall, benchmarks.small, ram.small);
+      chart.data.datasets[1].data = m.compute(adjLarge, benchmarks.large, ram.large);
+      const inflationSuffix = (inflationAdjusted && m.usesCurrency) ? ' (2026 dollars)' : '';
+      chart.options.plugins.title.text = m.title + inflationSuffix;
       chart.options.scales.y.title.text = m.yLabel;
       document.getElementById('note').textContent = m.note;
       chart.update();
@@ -292,6 +363,11 @@
         btn.classList.add('active');
         setMode(btn.dataset.mode);
       });
+    });
+
+    document.getElementById('inflationToggle').addEventListener('change', e => {
+      inflationAdjusted = e.target.checked;
+      setMode(currentMode);
     });
   </script>
 </body>
