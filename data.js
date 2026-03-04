@@ -39,6 +39,19 @@ const ram = {
   large: [   1,    2,   2,   4,  4,  4,  8,  8, 16, 16, 16, 16, 16, 16, 16, 16, 16, 18, 24, 24, 24],
 };
 
+// Base CPU core count in the starting configuration each year
+// Sources: Apple Tech Specs pages, EveryMac.com, Apple newsroom M5 announcement (Mar 3 2026)
+// 13" notes: 2-core i5 through 2017; jumped to 4-core Coffee Lake in 2018; 8-core M1 in 2020;
+//            M3 (2023) = 8-core; M4 (2024) = 10-core; M5 (2025) = 10-core.
+// 15"/16" notes: 2-core through 2010; 4-core Sandy Bridge from 2011; 6-core Coffee Lake from 2018;
+//               M1 Pro (2021) = 10-core; M3 Pro (2023) = 12-core; M4 Pro (2024) = 14-core;
+//               M5 Pro (2026) = 15-core.
+const cores = {
+  //           06    07    08   09   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26
+  small: [null, null, null,  2,   2,   2,   2,   2,   2,   2,   2,   2,   4,   4,   8,   8,   8,   8,  10,  10,  10],
+  large: [   2,    2,   2,   2,   2,   4,   4,   4,   4,   4,   4,   4,   6,   6,   6,  10,  10,  12,  14,  14,  15],
+};
+
 // Chip/generation name shown in tooltips
 const chipLabels = {
   small: [null, null, null, 'Core 2 Duo', 'Core 2 Duo', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'M1', 'M1', 'M2', 'M3', 'M4', 'M5', 'M5'],
