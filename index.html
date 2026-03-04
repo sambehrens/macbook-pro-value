@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MacBook Pro Price History</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f5f7;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      gap: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .control-row {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-group {
+      display: flex;
+      background: #e8e8ed;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .btn {
+      padding: 6px 16px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6e6e73;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:hover { color: #1d1d1f; }
+    .btn.active {
+      background: #fff;
+      color: #1d1d1f;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    .note {
+      font-size: 12px;
+      color: #9e9ea6;
+      margin: 0;
+      min-height: 16px;
+    }
+    .chart-container {
+      width: 85vw;
+      max-width: 1100px;
+      height: 60vh;
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    .sources {
+      width: 85vw;
+      max-width: 1100px;
+      font-size: 12px;
+      color: #9e9ea6;
+      padding-bottom: 24px;
+    }
+    .sources h3 {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9e9ea6;
+    }
+    .sources ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 20px;
+    }
+    .sources a {
+      color: #9e9ea6;
+      text-decoration: none;
+    }
+    .sources a:hover {
+      color: #1d1d1f;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <div class="control-row">
+      <div class="btn-group">
+        <button class="btn active" data-mode="price">Starting Price</button>
+        <button class="btn" data-mode="score_single">Single-Core Score</button>
+        <button class="btn" data-mode="score_multi">Multi-Core Score</button>
+      </div>
+      <div class="btn-group">
+        <button class="btn" data-mode="single">Single-Core Value</button>
+        <button class="btn" data-mode="multi">Multi-Core Value</button>
+        <button class="btn" data-mode="ram">RAM Value</button>
+      </div>
+    </div>
+    <p class="note" id="note"></p>
+  </div>
+  <div class="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
+  <section class="sources">
+    <h3>Sources</h3>
+    <ul>
+      <li><a href="https://everymac.com/systems/apple/macbook_pro/" target="_blank">EveryMac — pricing &amp; specs</a></li>
+      <li><a href="https://browser.geekbench.com/mac-benchmarks" target="_blank">Geekbench Mac Benchmarks — GB6 scores (Apple Silicon)</a></li>
+      <li><a href="https://browser.geekbench.com/v6/cpu/search" target="_blank">Geekbench Browser — GB6 scores (Intel 2015–2019)</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/MacBook_Pro" target="_blank">Wikipedia — MacBook Pro</a></li>
+    </ul>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="data.js"></script>
+  <script>
+    const modes = {
+      price: {
+        title: 'MacBook Pro Starting Price by Year',
+        yLabel: 'Starting Price (USD)',
+        note: '',
+        yFormat: val => '$' + val.toLocaleString(),
+        tipFormat: val => '$' + val.toLocaleString(),
+        compute: (prices) => [...prices],
+      },
+      score_single: {
+        title: 'MacBook Pro Single-Core Score by Year',
+        yLabel: 'GB6 Single-Core Score',
+        note: 'Raw Geekbench 6 single-core score. Pre-2015 and 2016 scores are estimated.',
+        yFormat: val => val.toLocaleString(),
+        tipFormat: val => val.toLocaleString() + ' pts',
+        compute: (_prices, bench) => [...bench.single],
+      },
+      score_multi: {
+        title: 'MacBook Pro Multi-Core Score by Year',
+        yLabel: 'GB6 Multi-Core Score',
+        note: 'Raw Geekbench 6 multi-core score. Pre-2015 and 2016 scores are estimated.',
+        yFormat: val => val.toLocaleString(),
+        tipFormat: val => val.toLocaleString() + ' pts',
+        compute: (_prices, bench) => [...bench.multi],
+      },
+      single: {
+        title: 'MacBook Pro Single-Core Value by Year',
+        yLabel: 'GB6 Single-Core Points per $1,000',
+        note: 'Geekbench 6 single-core score ÷ price × $1,000 — higher is better value. Pre-2015 and 2016 scores are estimated.',
+        yFormat: val => val.toLocaleString(),
+        tipFormat: val => val.toLocaleString() + ' pts per $1k',
+        compute: (prices, bench) => prices.map((p, i) =>
+          p == null || bench.single[i] == null ? null : Math.round(bench.single[i] / p * 1000)
+        ),
+      },
+      multi: {
+        title: 'MacBook Pro Multi-Core Value by Year',
+        yLabel: 'GB6 Multi-Core Points per $1,000',
+        note: 'Geekbench 6 multi-core score ÷ price × $1,000 — higher is better value. Pre-2015 and 2016 scores are estimated.',
+        yFormat: val => val.toLocaleString(),
+        tipFormat: val => val.toLocaleString() + ' pts per $1k',
+        compute: (prices, bench) => prices.map((p, i) =>
+          p == null || bench.multi[i] == null ? null : Math.round(bench.multi[i] / p * 1000)
+        ),
+      },
+      ram: {
+        title: 'MacBook Pro RAM Value by Year',
+        yLabel: 'GB of RAM per $1,000',
+        note: 'Base RAM (GB) ÷ price × $1,000 — higher is better value.',
+        yFormat: val => +val.toFixed(1) + ' GB',
+        tipFormat: val => +val.toFixed(2) + ' GB per $1k',
+        compute: (prices, _bench, ramGb) => prices.map((p, i) =>
+          p == null || ramGb[i] == null ? null : parseFloat((ramGb[i] / p * 1000).toFixed(2))
+        ),
+      },
+    };
+
+    let currentMode = 'price';
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [
+          {
+            label: 'Small (13" → 14")',
+            data: smallModel,
+            spanGaps: false,
+            borderColor: '#0071e3',
+            backgroundColor: 'rgba(0,113,227,0.08)',
+            pointBackgroundColor: '#0071e3',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            borderWidth: 2.5,
+            tension: 0,
+          },
+          {
+            label: 'Large (15" → 16")',
+            data: largeModel,
+            spanGaps: false,
+            borderColor: '#ff6b00',
+            backgroundColor: 'rgba(255,107,0,0.08)',
+            pointBackgroundColor: '#ff6b00',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            borderWidth: 2.5,
+            tension: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: modes.price.title,
+            font: { size: 20, weight: '600' },
+            color: '#1d1d1f',
+            padding: { bottom: 20 },
+          },
+          legend: {
+            labels: {
+              font: { size: 14 },
+              color: '#1d1d1f',
+              usePointStyle: true,
+              pointStyleWidth: 16,
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                if (ctx.parsed.y == null) return null;
+                const chips = ctx.datasetIndex === 0 ? chipLabels.small : chipLabels.large;
+                const chip = chips[ctx.dataIndex];
+                const chipStr = chip ? ` (${chip})` : '';
+                return ` ${ctx.dataset.label}${chipStr}: ${modes[currentMode].tipFormat(ctx.parsed.y)}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { font: { size: 13 }, color: '#6e6e73', maxRotation: 0 },
+            grid: { color: 'rgba(0,0,0,0.06)' },
+          },
+          y: {
+            ticks: {
+              font: { size: 13 },
+              color: '#6e6e73',
+              callback: val => modes[currentMode].yFormat(val),
+            },
+            grid: { color: 'rgba(0,0,0,0.06)' },
+            title: {
+              display: true,
+              text: modes.price.yLabel,
+              font: { size: 13 },
+              color: '#6e6e73',
+            },
+          },
+        },
+      },
+    });
+
+    function setMode(mode) {
+      currentMode = mode;
+      const m = modes[mode];
+      chart.data.datasets[0].data = m.compute(smallModel, benchmarks.small, ram.small);
+      chart.data.datasets[1].data = m.compute(largeModel, benchmarks.large, ram.large);
+      chart.options.plugins.title.text = m.title;
+      chart.options.scales.y.title.text = m.yLabel;
+      document.getElementById('note').textContent = m.note;
+      chart.update();
+    }
+
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setMode(btn.dataset.mode);
+      });
+    });
+  </script>
+</body>
+</html>
