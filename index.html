@@ -141,12 +141,14 @@
         <button class="btn" data-mode="score_single">Single-Core Score</button>
         <button class="btn" data-mode="score_multi">Multi-Core Score</button>
         <button class="btn" data-mode="ram_gb">Base RAM</button>
+        <button class="btn" data-mode="ram_market_price">Market RAM $/GB</button>
         <button class="btn" data-mode="cores_base">Base Cores</button>
       </div>
       <div class="btn-group">
         <button class="btn" data-mode="single">Single-Core Value</button>
         <button class="btn" data-mode="multi">Multi-Core Value</button>
         <button class="btn" data-mode="ram">RAM Value</button>
+        <button class="btn" data-mode="ram_market_value">RAM Coverage %</button>
         <button class="btn" data-mode="cores_value">Core Value</button>
       </div>
     </div>
@@ -171,6 +173,8 @@
       <li><a href="https://en.wikipedia.org/wiki/MacBook_Pro" target="_blank">Wikipedia — MacBook Pro</a></li>
       <li><a href="https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator/consumer-price-index-1913-" target="_blank">Federal Reserve Bank of Minneapolis — CPI 1913–present</a></li>
       <li><a href="https://www.bls.gov/news.release/cpi.nr0.htm" target="_blank">U.S. Bureau of Labor Statistics — CPI News Release</a></li>
+      <li><a href="https://www.statista.com/statistics/302869/dram-memory-average-selling-price-worldwide/" target="_blank">Statista — DRAM average selling price</a></li>
+      <li><a href="https://trendforce.com/research/dram/" target="_blank">TrendForce (DRAMeXchange) — DRAM market reports</a></li>
     </ul>
   </section>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -293,6 +297,37 @@
           p == null || coresData[i] == null ? null : parseFloat((coresData[i] / p * 1000).toFixed(3))
         ),
       },
+      ram_market_price: {
+        title: 'Consumer DRAM Market Price per GB',
+        yLabel: 'Market Price ($/GB)',
+        note: 'Approximate retail price per GB for consumer DDR memory (DDR2–DDR5). DRAM is highly cyclical — supply gluts and shortages can swing prices 3–4×. Apple Silicon uses LPDDR5X unified memory, which commands a significant premium over standard DDR; these figures are a market reference.',
+        usesCurrency: false,
+        noChip: true,
+        yFormat: val => '$' + val + '/GB',
+        tipFormat: val => '$' + val + '/GB',
+        computeDatasets: () => [
+          { label: 'Consumer DRAM', data: [...marketRamPricePerGB] },
+          { label: '_hidden', data: years.map(() => null) },
+        ],
+      },
+      ram_market_value: {
+        title: 'MacBook RAM Market Coverage',
+        yLabel: 'Market Cost of RAM (% of MacBook price)',
+        note: 'Market cost of included RAM (market $/GB × base GB) ÷ MacBook starting price × 100. Higher means RAM represents a larger share of what you\'re paying for. Uses consumer DDR as a market reference; Apple Silicon unified memory is premium-priced LPDDR5X.',
+        usesCurrency: false,
+        yFormat: val => val.toFixed(1) + '%',
+        tipFormat: val => val.toFixed(1) + '%',
+        tipExtra: (dsIdx, idx) => {
+          const ramGb = dsIdx === 0 ? ram.small : ram.large;
+          const gb = ramGb[idx];
+          const mktPrice = marketRamPricePerGB[idx];
+          return gb != null ? ` — ${gb} GB × $${mktPrice}/GB` : '';
+        },
+        compute: (prices, _bench, ramGb) => prices.map((p, i) =>
+          p == null || ramGb[i] == null ? null :
+          parseFloat((marketRamPricePerGB[i] * ramGb[i] / p * 100).toFixed(1))
+        ),
+      },
     };
 
     let currentMode = 'price';
@@ -346,16 +381,20 @@
               color: '#1d1d1f',
               usePointStyle: true,
               pointStyleWidth: 16,
+              filter: item => item.text !== '_hidden',
             },
           },
           tooltip: {
             callbacks: {
               label: ctx => {
                 if (ctx.parsed.y == null) return null;
-                const chips = ctx.datasetIndex === 0 ? chipLabels.small : chipLabels.large;
-                const chip = chips[ctx.dataIndex];
-                const chipStr = chip ? ` (${chip})` : '';
                 const m = modes[currentMode];
+                let chipStr = '';
+                if (!m.noChip) {
+                  const chips = ctx.datasetIndex === 0 ? chipLabels.small : chipLabels.large;
+                  const chip = chips[ctx.dataIndex];
+                  if (chip) chipStr = ` (${chip})`;
+                }
                 const extra = m.tipExtra ? m.tipExtra(ctx.datasetIndex, ctx.dataIndex) : '';
                 return ` ${ctx.dataset.label}${chipStr}: ${m.tipFormat(ctx.parsed.y)}${extra}`;
               },
@@ -390,8 +429,18 @@
       const m = modes[mode];
       const adjSmall = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(smallModel) : smallModel;
       const adjLarge = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(largeModel) : largeModel;
-      chart.data.datasets[0].data = m.compute(adjSmall, benchmarks.small, ram.small, cores.small);
-      chart.data.datasets[1].data = m.compute(adjLarge, benchmarks.large, ram.large, cores.large);
+      chart.data.datasets[0].label = 'Small (13" → 14")';
+      chart.data.datasets[1].label = 'Large (15" → 16")';
+      if (m.computeDatasets) {
+        const datasets = m.computeDatasets(adjSmall, adjLarge);
+        datasets.forEach((ds, i) => {
+          chart.data.datasets[i].label = ds.label;
+          chart.data.datasets[i].data = ds.data;
+        });
+      } else {
+        chart.data.datasets[0].data = m.compute(adjSmall, benchmarks.small, ram.small, cores.small);
+        chart.data.datasets[1].data = m.compute(adjLarge, benchmarks.large, ram.large, cores.large);
+      }
       const inflationSuffix = (inflationAdjusted && m.usesCurrency) ? ' (2026 dollars)' : '';
       chart.options.plugins.title.text = m.title + inflationSuffix;
       chart.options.scales.y.title.text = m.yLabel;
