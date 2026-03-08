@@ -301,12 +301,12 @@
         title: 'Consumer DRAM Market Price per GB',
         yLabel: 'Market Price ($/GB)',
         note: 'Approximate retail price per GB for consumer DDR memory (DDR2–DDR5). DRAM is highly cyclical — supply gluts and shortages can swing prices 3–4×. Apple Silicon uses LPDDR5X unified memory, which commands a significant premium over standard DDR; these figures are a market reference.',
-        usesCurrency: false,
+        usesCurrency: true,
         noChip: true,
         yFormat: val => '$' + val + '/GB',
         tipFormat: val => '$' + val + '/GB',
-        computeDatasets: () => [
-          { label: 'Consumer DRAM', data: [...marketRamPricePerGB] },
+        computeDatasets: (_s, _l, adjMarketRam) => [
+          { label: 'Consumer DRAM', data: [...adjMarketRam] },
           { label: '_hidden', data: years.map(() => null) },
         ],
       },
@@ -314,7 +314,7 @@
         title: 'MacBook RAM Market Coverage',
         yLabel: 'Market Cost of RAM (% of MacBook price)',
         note: 'Market cost of included RAM (market $/GB × base GB) ÷ MacBook starting price × 100. Higher means RAM represents a larger share of what you\'re paying for. Uses consumer DDR as a market reference; Apple Silicon unified memory is premium-priced LPDDR5X.',
-        usesCurrency: false,
+        usesCurrency: true,
         yFormat: val => val.toFixed(1) + '%',
         tipFormat: val => val.toFixed(1) + '%',
         tipExtra: (dsIdx, idx) => {
@@ -429,10 +429,13 @@
       const m = modes[mode];
       const adjSmall = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(smallModel) : smallModel;
       const adjLarge = (inflationAdjusted && m.usesCurrency) ? adjustedPrices(largeModel) : largeModel;
+      const adjMarketRam = (inflationAdjusted && m.usesCurrency)
+        ? marketRamPricePerGB.map((p, i) => parseFloat((p * CPI_REF / cpi[years[i]]).toFixed(2)))
+        : marketRamPricePerGB;
       chart.data.datasets[0].label = 'Small (13" → 14")';
       chart.data.datasets[1].label = 'Large (15" → 16")';
       if (m.computeDatasets) {
-        const datasets = m.computeDatasets(adjSmall, adjLarge);
+        const datasets = m.computeDatasets(adjSmall, adjLarge, adjMarketRam);
         datasets.forEach((ds, i) => {
           chart.data.datasets[i].label = ds.label;
           chart.data.datasets[i].data = ds.data;
