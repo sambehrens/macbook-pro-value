@@ -39,6 +39,47 @@ const ram = {
   large: [   1,    2,   2,   4,  4,  4,  8,  8, 16, 16, 16, 16, 16, 16, 16, 16, 16, 18, 24, 24, 24],
 };
 
+// Base CPU core count in the starting configuration each year
+// Sources: Apple Tech Specs pages, EveryMac.com, Apple newsroom M5 announcement (Mar 3 2026)
+// 13" notes: 2-core i5 through 2017; jumped to 4-core Coffee Lake in 2018; 8-core M1 in 2020;
+//            M3 (2023) = 8-core; M4 (2024) = 10-core; M5 (2025) = 10-core.
+// 15"/16" notes: 2-core through 2010; 4-core Sandy Bridge from 2011; 6-core Coffee Lake from 2018;
+//               M1 Pro (2021) = 10-core; M3 Pro (2023) = 12-core; M4 Pro (2024) = 14-core;
+//               M5 Pro (2026) = 18-core (6 super + 12 performance, per apple.com/macbook-pro/specs/).
+const cores = {
+  //           06    07    08   09   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26
+  small: [null, null, null,  2,   2,   2,   2,   2,   2,   2,   2,   2,   4,   4,   8,   8,   8,   8,  10,  10,  10],
+  large: [   2,    2,   2,   2,   2,   4,   4,   4,   4,   4,   4,   4,   6,   6,   6,  10,  10,  12,  14,  14,  18],
+};
+
+// Approximate retail consumer DRAM price per GB (USD)
+// DDR2 era (2006–2008), DDR3 era (2009–2016), DDR4 era (2017–2021), DDR4/DDR5 (2022+)
+// Sources: DRAMeXchange/TrendForce historical pricing, Statista, Tom's Hardware price trackers
+// Note: Apple Silicon uses LPDDR5X unified memory; standard DDR is used here as a market reference.
+const marketRamPricePerGB = [
+  100, // 2006 - DDR2, elevated prices before the crash
+   25, // 2007 - major oversupply crash (>70% price drop)
+   12, // 2008 - continued decline, DDR2/DDR3 transition
+    8, // 2009 - stabilized at new floor
+    6, // 2010
+    8, // 2011 - supply disruption (manufacturer consolidation)
+    4, // 2012 - DDR3 oversupply, prices fell sharply
+    9, // 2013 - supply tightening (Elpida bankruptcy, Samsung fire)
+    9, // 2014 - remained elevated
+    6, // 2015 - prices eased
+    3, // 2016 - oversupply low point
+    8, // 2017 - DDR4 shortage, prices spiked
+   10, // 2018 - shortage peak
+    5, // 2019 - correction, oversupply
+    4, // 2020 - continued low
+    6, // 2021 - recovery
+    7, // 2022 - DDR5 launch year, mixed DDR4/DDR5 market
+    3, // 2023 - massive crash (lowest in years, all major manufacturers cut production)
+    6, // 2024 - recovery driven by AI/HBM demand tightening supply
+    8, // 2025 - AI demand + supply constraints
+    8, // 2026
+];
+
 // Chip/generation name shown in tooltips
 const chipLabels = {
   small: [null, null, null, 'Core 2 Duo', 'Core 2 Duo', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'M1', 'M1', 'M2', 'M3', 'M4', 'M5', 'M5'],
