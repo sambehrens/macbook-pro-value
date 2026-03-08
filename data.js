@@ -52,6 +52,34 @@ const cores = {
   large: [   2,    2,   2,   2,   2,   4,   4,   4,   4,   4,   4,   4,   6,   6,   6,  10,  10,  12,  14,  14,  18],
 };
 
+// Approximate retail consumer DRAM price per GB (USD)
+// DDR2 era (2006–2008), DDR3 era (2009–2016), DDR4 era (2017–2021), DDR4/DDR5 (2022+)
+// Sources: DRAMeXchange/TrendForce historical pricing, Statista, Tom's Hardware price trackers
+// Note: Apple Silicon uses LPDDR5X unified memory; standard DDR is used here as a market reference.
+const marketRamPricePerGB = [
+  100, // 2006 - DDR2, elevated prices before the crash
+   25, // 2007 - major oversupply crash (>70% price drop)
+   12, // 2008 - continued decline, DDR2/DDR3 transition
+    8, // 2009 - stabilized at new floor
+    6, // 2010
+    8, // 2011 - supply disruption (manufacturer consolidation)
+    4, // 2012 - DDR3 oversupply, prices fell sharply
+    9, // 2013 - supply tightening (Elpida bankruptcy, Samsung fire)
+    9, // 2014 - remained elevated
+    6, // 2015 - prices eased
+    3, // 2016 - oversupply low point
+    8, // 2017 - DDR4 shortage, prices spiked
+   10, // 2018 - shortage peak
+    5, // 2019 - correction, oversupply
+    4, // 2020 - continued low
+    6, // 2021 - recovery
+    7, // 2022 - DDR5 launch year, mixed DDR4/DDR5 market
+    3, // 2023 - massive crash (lowest in years, all major manufacturers cut production)
+    6, // 2024 - recovery driven by AI/HBM demand tightening supply
+    8, // 2025 - AI demand + supply constraints
+    8, // 2026
+];
+
 // Chip/generation name shown in tooltips
 const chipLabels = {
   small: [null, null, null, 'Core 2 Duo', 'Core 2 Duo', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'Core i5', 'M1', 'M1', 'M2', 'M3', 'M4', 'M5', 'M5'],
