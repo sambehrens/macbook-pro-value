@@ -14,7 +14,7 @@ const largeModel = [1999,1999,1999,1699,1799,1799,1799,1999,1999,1999,2399,2399,
 //                 scores extrapolated from the 2015 anchor using per-generation CPU trends.
 //                 2016 Intel search results were anomalously low (Skylake < Haswell makes no
 //                 sense), so those years are also estimated.
-//                 M5 Pro 16" (2026) estimated from M4 Pro + typical Apple Silicon uplift.
+//                 M5 Pro 16" (2026) scores are now real (sourced from everymac.com aggregate).
 const benchmarks = {
   small: {
     //          06    07    08   09   10    11    12    13    14    15     16    17    18    19    20    21    22    23    24    25    26
@@ -25,10 +25,9 @@ const benchmarks = {
   },
   large: {
     //          06   07   08   09    10    11    12    13    14    15    16    17    18    19    20    21    22    23    24    25    26
-    // source: est  est  est  est   est   est   est   est   est  real   est   est  srch  srch  srch  real  real  real  real  real   est
-    // Note: M5 Pro 16" (2026) not yet on Geekbench as of March 2026 — score is estimated.
-    single: [ 250,  340,  370,  400,  480,  744,  875,  938, 1042, 1042,  940, 1020, 1272, 1355, 1355, 2374, 2374, 3105, 3878, 3878, 4460],
-    multi:  [ 450,  640,  680,  720, 1050, 2678, 3150, 3383, 3759, 3759, 3000, 3270, 4884, 5528, 5528,12254,12254,15249,22490,22490,27000],
+    // source: est  est  est  est   est   est   est   est   est  real   est   est  srch  srch  srch  real  real  real  real  real  real
+    single: [ 250,  340,  370,  400,  480,  744,  875,  938, 1042, 1042,  940, 1020, 1272, 1355, 1355, 2374, 2374, 3105, 3878, 3878, 4288],
+    multi:  [ 450,  640,  680,  720, 1050, 2678, 3150, 3383, 3759, 3759, 3000, 3270, 4884, 5528, 5528,12254,12254,15249,22490,22490,27990],
   },
 };
 
