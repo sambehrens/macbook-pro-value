@@ -15,24 +15,35 @@
       align-items: center;
       min-height: 100vh;
       gap: 16px;
+      padding: 24px 16px 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     .controls {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      max-width: 100%;
     }
     .control-row {
       display: flex;
-      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px 20px;
     }
     .btn-group {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       background: #e8e8ed;
       border-radius: 8px;
       padding: 3px;
       gap: 2px;
+    }
+    .btn-group.small .btn {
+      padding: 4px 12px;
+      font-size: 12px;
     }
     .btn {
       padding: 6px 16px;
@@ -45,7 +56,11 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .btn:hover { color: #1d1d1f; }
+    .btn:hover:not(:disabled) { color: #1d1d1f; }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
     .btn.active {
       background: #fff;
       color: #1d1d1f;
@@ -56,6 +71,9 @@
       color: #9e9ea6;
       margin: 0;
       min-height: 16px;
+      max-width: 760px;
+      text-align: center;
+      line-height: 1.5;
     }
     .chart-container {
       width: 85vw;
@@ -131,29 +149,28 @@
     }
     .inflation-toggle input:checked + .toggle-track { background: #0071e3; }
     .inflation-toggle input:checked + .toggle-track::after { left: 18px; }
+    .inflation-toggle.disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
   <div class="controls">
-    <div class="control-row">
-      <div class="btn-group">
-        <button class="btn active" data-mode="price">Starting Price</button>
-        <button class="btn" data-mode="score_single">Single-Core Score</button>
-        <button class="btn" data-mode="score_multi">Multi-Core Score</button>
-        <button class="btn" data-mode="ram_gb">Base RAM</button>
-        <button class="btn" data-mode="ram_market_price">Market RAM $/GB</button>
-        <button class="btn" data-mode="cores_base">Base Cores</button>
-      </div>
-      <div class="btn-group">
-        <button class="btn" data-mode="single">Single-Core Value</button>
-        <button class="btn" data-mode="multi">Multi-Core Value</button>
-        <button class="btn" data-mode="ram">RAM Value</button>
-        <button class="btn" data-mode="ram_market_value">RAM Coverage %</button>
-        <button class="btn" data-mode="cores_value">Core Value</button>
-      </div>
+    <div class="btn-group" id="metricGroup">
+      <button class="btn active" data-metric="price">Price</button>
+      <button class="btn" data-metric="single">Single-Core</button>
+      <button class="btn" data-metric="multi">Multi-Core</button>
+      <button class="btn" data-metric="ram">RAM</button>
+      <button class="btn" data-metric="cores">CPU Cores</button>
+      <button class="btn" data-metric="dram">DRAM Market</button>
     </div>
     <div class="control-row">
-      <label class="inflation-toggle">
+      <div class="btn-group small" id="viewGroup">
+        <button class="btn active" data-view="raw">Raw</button>
+        <button class="btn" data-view="value" id="valueBtn">Per $1,000</button>
+      </div>
+      <label class="inflation-toggle" id="inflationLabel">
         <input type="checkbox" id="inflationToggle">
         <span class="toggle-track"></span>
         Adjust for inflation (2026 dollars)
@@ -168,26 +185,29 @@
     <h3>Sources</h3>
     <ul>
       <li><a href="https://everymac.com/systems/apple/macbook_pro/" target="_blank">EveryMac — pricing &amp; specs</a></li>
-      <li><a href="https://browser.geekbench.com/mac-benchmarks" target="_blank">Geekbench Mac Benchmarks — GB6 scores (Apple Silicon)</a></li>
-      <li><a href="https://browser.geekbench.com/v6/cpu/search" target="_blank">Geekbench Browser — GB6 scores (Intel 2015–2019)</a></li>
+      <li><a href="https://browser.geekbench.com/mac-benchmarks" target="_blank">Geekbench Mac Benchmarks — GB6 scores (2013–2026)</a></li>
+      <li><a href="https://everymac.com/mac-benchmarks/" target="_blank">EveryMac — GB6 averages (2008–2012)</a></li>
+      <li><a href="https://www.apple.com/newsroom/2026/03/apple-introduces-macbook-pro-with-all-new-m5-pro-and-m5-max/" target="_blank">Apple Newsroom — M5 Pro/Max MacBook Pro</a></li>
+      <li><a href="https://www.iclarified.com/101297/apple-raises-prices-across-macs-ipads-and-more-amid-memory-shortage" target="_blank">iClarified — June 2026 price increase</a></li>
       <li><a href="https://en.wikipedia.org/wiki/MacBook_Pro" target="_blank">Wikipedia — MacBook Pro</a></li>
       <li><a href="https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator/consumer-price-index-1913-" target="_blank">Federal Reserve Bank of Minneapolis — CPI 1913–present</a></li>
       <li><a href="https://www.bls.gov/news.release/cpi.nr0.htm" target="_blank">U.S. Bureau of Labor Statistics — CPI News Release</a></li>
       <li><a href="https://www.statista.com/statistics/302869/dram-memory-average-selling-price-worldwide/" target="_blank">Statista — DRAM average selling price</a></li>
       <li><a href="https://trendforce.com/research/dram/" target="_blank">TrendForce (DRAMeXchange) — DRAM market reports</a></li>
+      <li><a href="https://capitalandcompute.net/memory-prices/ddr5/" target="_blank">Capital &amp; Compute — DDR5 price tracker</a></li>
     </ul>
   </section>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="data.js"></script>
   <script>
     // Annual average CPI-U (1982–84 = 100). Source: Federal Reserve Bank of Minneapolis / BLS.
-    // 2026 = January 2026 value (325.252) per BLS news release.
+    // 2026 = August 2026 value (334.980), the latest BLS news release.
     const cpi = {
       2006: 201.6, 2007: 207.3, 2008: 215.3, 2009: 214.5, 2010: 218.1,
       2011: 224.9, 2012: 229.6, 2013: 233.0, 2014: 236.7, 2015: 237.0,
       2016: 240.0, 2017: 245.1, 2018: 251.1, 2019: 255.7, 2020: 258.8,
       2021: 271.0, 2022: 292.7, 2023: 304.7, 2024: 313.7, 2025: 321.9,
-      2026: 325.3,
+      2026: 335.0,
     };
     const CPI_REF = cpi[2026];
 
@@ -203,16 +223,17 @@
       price: {
         title: 'MacBook Pro Starting Price by Year',
         yLabel: 'Starting Price (USD)',
-        note: '',
+        note: '2026 includes Apple\'s $300 price increase on June 25, 2026, which it attributed to the global memory shortage.',
         usesCurrency: true,
         yFormat: val => '$' + val.toLocaleString(),
         tipFormat: val => '$' + val.toLocaleString(),
+        tipExtra: (_dsIdx, idx) => years[idx] === 2026 ? ' — includes $300 increase (Jun 2026)' : '',
         compute: (prices) => [...prices],
       },
       score_single: {
         title: 'MacBook Pro Single-Core Score by Year',
         yLabel: 'GB6 Single-Core Score',
-        note: 'Raw Geekbench 6 single-core score. Pre-2015 and 2016 scores are estimated.',
+        note: 'Raw Geekbench 6 single-core score. 2006–2007 scores are estimated; 2008–2012 are scaled from EveryMac averages.',
         usesCurrency: false,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts',
@@ -221,7 +242,7 @@
       score_multi: {
         title: 'MacBook Pro Multi-Core Score by Year',
         yLabel: 'GB6 Multi-Core Score',
-        note: 'Raw Geekbench 6 multi-core score. Pre-2015 and 2016 scores are estimated.',
+        note: 'Raw Geekbench 6 multi-core score. 2006–2007 scores are estimated; 2008–2012 are scaled from EveryMac averages.',
         usesCurrency: false,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts',
@@ -230,7 +251,7 @@
       single: {
         title: 'MacBook Pro Single-Core Value by Year',
         yLabel: 'GB6 Single-Core Points per $1,000',
-        note: 'Geekbench 6 single-core score ÷ price × $1,000 — higher is better value. Pre-2015 and 2016 scores are estimated.',
+        note: 'Geekbench 6 single-core score ÷ price × $1,000 — higher is better value. 2006–2007 scores are estimated; 2008–2012 are scaled from EveryMac averages.',
         usesCurrency: true,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts per $1k',
@@ -241,7 +262,7 @@
       multi: {
         title: 'MacBook Pro Multi-Core Value by Year',
         yLabel: 'GB6 Multi-Core Points per $1,000',
-        note: 'Geekbench 6 multi-core score ÷ price × $1,000 — higher is better value. Pre-2015 and 2016 scores are estimated.',
+        note: 'Geekbench 6 multi-core score ÷ price × $1,000 — higher is better value. 2006–2007 scores are estimated; 2008–2012 are scaled from EveryMac averages.',
         usesCurrency: true,
         yFormat: val => val.toLocaleString(),
         tipFormat: val => val.toLocaleString() + ' pts per $1k',
@@ -380,7 +401,7 @@
               font: { size: 14 },
               color: '#1d1d1f',
               usePointStyle: true,
-              pointStyleWidth: 16,
+              boxHeight: 8,
               filter: item => item.text !== '_hidden',
             },
           },
@@ -451,18 +472,60 @@
       chart.update();
     }
 
-    document.querySelectorAll('.btn').forEach(btn => {
+    // Each metric has a raw view and (except price) a price-relative view.
+    const metrics = {
+      price:  { raw: 'price',            value: null },
+      single: { raw: 'score_single',     value: 'single' },
+      multi:  { raw: 'score_multi',      value: 'multi' },
+      ram:    { raw: 'ram_gb',           value: 'ram' },
+      cores:  { raw: 'cores_base',       value: 'cores_value' },
+      dram:   { raw: 'ram_market_price', value: 'ram_market_value', valueLabel: '% of Price' },
+    };
+
+    let currentMetric = 'price';
+    let currentView = 'raw';
+
+    const valueBtn = document.getElementById('valueBtn');
+    const inflationToggle = document.getElementById('inflationToggle');
+    const inflationLabel = document.getElementById('inflationLabel');
+
+    function render() {
+      const metric = metrics[currentMetric];
+      const view = metric.value ? currentView : 'raw';
+      document.querySelectorAll('#metricGroup .btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.metric === currentMetric));
+      document.querySelectorAll('#viewGroup .btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.view === view));
+      valueBtn.disabled = !metric.value;
+      valueBtn.textContent = metric.valueLabel || 'Per $1,000';
+
+      const mode = metric[view];
+      const usesCurrency = modes[mode].usesCurrency;
+      inflationToggle.disabled = !usesCurrency;
+      inflationLabel.classList.toggle('disabled', !usesCurrency);
+      setMode(mode);
+    }
+
+    document.querySelectorAll('#metricGroup .btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        setMode(btn.dataset.mode);
+        currentMetric = btn.dataset.metric;
+        render();
       });
     });
 
-    document.getElementById('inflationToggle').addEventListener('change', e => {
-      inflationAdjusted = e.target.checked;
-      setMode(currentMode);
+    document.querySelectorAll('#viewGroup .btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentView = btn.dataset.view;
+        render();
+      });
     });
+
+    inflationToggle.addEventListener('change', e => {
+      inflationAdjusted = e.target.checked;
+      render();
+    });
+
+    render();
   </script>
 </body>
 </html>

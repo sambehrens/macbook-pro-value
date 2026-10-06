@@ -10,17 +10,18 @@ Open `index.html` directly in a browser. No build step or server required.
 
 ## Views
 
-Six chart modes, grouped into two sets:
+Pick a metric, then choose **Raw** or **Per $1,000** (higher = better value):
 
-**Raw**
-- **Starting Price** — base model price in USD each year
-- **Single-Core Score** — Geekbench 6 single-core score
-- **Multi-Core Score** — Geekbench 6 multi-core score
+| Metric | Raw | Per $1,000 |
+|--------|-----|------------|
+| **Price** | Base model starting price (USD) | — |
+| **Single-Core** | Geekbench 6 single-core score | GB6 single-core points per $1,000 |
+| **Multi-Core** | Geekbench 6 multi-core score | GB6 multi-core points per $1,000 |
+| **RAM** | Base RAM (GB) | GB of base RAM per $1,000 |
+| **CPU Cores** | Base CPU core count | Cores per $1,000 |
+| **DRAM Market** | Consumer DRAM $/GB | Market cost of the base RAM as a % of the starting price |
 
-**Per $1,000** (higher = better value)
-- **Single-Core Value** — GB6 single-core points per $1,000 spent
-- **Multi-Core Value** — GB6 multi-core points per $1,000 spent
-- **RAM Value** — gigabytes of base RAM per $1,000 spent
+Dollar-based views can be adjusted for inflation to 2026 dollars (CPI-U).
 
 Both the 13"/14" (small) and 15"/16" (large) model lines are shown. Tooltips include the chip generation (e.g. M1, M2, Core i7).
 
@@ -33,17 +34,17 @@ Both the 13"/14" (small) and 15"/16" (large) model lines are shown. Tooltips inc
 
 ## Data sources
 
-- **Pricing & specs** — [EveryMac](https://everymac.com/systems/apple/macbook_pro/)
-- **GB6 scores (Apple Silicon)** — [Geekbench Mac Benchmarks](https://browser.geekbench.com/mac-benchmarks) (aggregate averages)
-- **GB6 scores (Intel 2015–2019)** — [Geekbench Browser search](https://browser.geekbench.com/v6/cpu/search) (individual submissions)
+- **Pricing & specs** — [EveryMac](https://everymac.com/systems/apple/macbook_pro/), [Apple Newsroom](https://www.apple.com/newsroom/2026/03/apple-introduces-macbook-pro-with-all-new-m5-pro-and-m5-max/)
+- **GB6 scores** — [Geekbench Mac Benchmarks](https://browser.geekbench.com/mac-benchmarks) (Late 2013 onward) and [EveryMac Geekbench 6 averages](https://everymac.com/mac-benchmarks/) (2008–2012)
 - **Model history** — [Wikipedia: MacBook Pro](https://en.wikipedia.org/wiki/MacBook_Pro)
+- **Inflation** — [BLS CPI-U](https://www.bls.gov/news.release/cpi.nr0.htm) (annual averages; 2026 uses August 2026)
+
+Each year uses the cheapest current-lineup configuration at the end of that year (or today, for 2026). 2026 prices reflect Apple's $300 increase on June 25, 2026 ($1,999 14" M5, $2,999 16" M5 Pro).
 
 ### Benchmark coverage
 
 | Years | Source |
 |-------|--------|
-| 2020–2025 | Real GB6 averages from Geekbench |
-| 2015–2019 Intel | Real GB6 individual submissions |
-| 2009–2014 | Estimated — GB6 requires macOS 12+, which these machines can't run; scores extrapolated from the 2015 Broadwell baseline using per-generation CPU trends |
-| 2006–2008 | Estimated |
-| 2026 large (M5 Pro 16") | Estimated — not yet on Geekbench as of March 2026 |
+| 2013–2026 | Geekbench Mac Benchmarks chart averages for the exact base configuration (Sep 2026) |
+| 2008–2012 | EveryMac GB6 averages, scaled ×0.961 single / ×0.930 multi to match the Geekbench chart (ratio measured on the 2013–2015 models both sources cover) |
+| 2006–2007 | Estimated — no GB6 results exist for Merom Core 2 Duo MacBook Pros; scaled from the Early 2008 T8300 by clock speed and IPC |
