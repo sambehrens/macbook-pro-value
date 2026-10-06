@@ -153,6 +153,31 @@
       opacity: 0.4;
       cursor: default;
     }
+    @media (max-width: 600px) {
+      body {
+        padding: 16px 16px 0;
+        gap: 12px;
+      }
+      .controls { width: 100%; }
+      #metricGroup {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: 100%;
+      }
+      #metricGroup .btn {
+        padding: 8px 4px;
+      }
+      .btn-group.small .btn {
+        padding: 6px 14px;
+      }
+      .chart-container {
+        width: 100%;
+        height: 65vh;
+        min-height: 420px;
+        padding: 12px 8px 8px;
+      }
+      .sources { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -353,6 +378,9 @@
 
     let currentMode = 'price';
 
+    const narrowQuery = window.matchMedia('(max-width: 600px)');
+    const isNarrow = () => narrowQuery.matches;
+
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -424,7 +452,16 @@
         },
         scales: {
           x: {
-            ticks: { font: { size: 13 }, color: '#6e6e73', maxRotation: 0 },
+            ticks: {
+              font: { size: 13 },
+              color: '#6e6e73',
+              maxRotation: 0,
+              // Two-digit years ('06) on phones so labels don't run together.
+              callback: function (val) {
+                const year = this.getLabelForValue(val);
+                return isNarrow() ? "'" + String(year).slice(2) : year;
+              },
+            },
             grid: { color: 'rgba(0,0,0,0.06)' },
           },
           y: {
@@ -444,6 +481,25 @@
         },
       },
     });
+
+    // Phone-width chart tweaks; desktop keeps the options defined above.
+
+    function applySize() {
+      const narrow = isNarrow();
+      const o = chart.options;
+      o.plugins.title.font.size = narrow ? 15 : 20;
+      o.plugins.title.padding.bottom = narrow ? 8 : 20;
+      o.plugins.legend.labels.font.size = narrow ? 12 : 14;
+      o.plugins.legend.labels.boxHeight = narrow ? 6 : 8;
+      o.scales.x.ticks.font.size = narrow ? 11 : 13;
+      o.scales.y.ticks.font.size = narrow ? 11 : 13;
+      o.scales.y.title.display = !narrow;
+      chart.data.datasets.forEach(ds => {
+        ds.pointRadius = narrow ? 3 : 5;
+        ds.pointHoverRadius = narrow ? 5 : 7;
+        ds.borderWidth = narrow ? 2 : 2.5;
+      });
+    }
 
     function setMode(mode) {
       currentMode = mode;
@@ -466,7 +522,9 @@
         chart.data.datasets[1].data = m.compute(adjLarge, benchmarks.large, ram.large, cores.large);
       }
       const inflationSuffix = (inflationAdjusted && m.usesCurrency) ? ' (2026 dollars)' : '';
-      chart.options.plugins.title.text = m.title + inflationSuffix;
+      // On phones, drop the "MacBook Pro … by Year" framing so the title fits on one line.
+      const title = isNarrow() ? m.title.replace(/^MacBook Pro /, '').replace(/ by Year$/, '') : m.title;
+      chart.options.plugins.title.text = title + inflationSuffix;
       chart.options.scales.y.title.text = m.yLabel;
       document.getElementById('note').textContent = m.note;
       chart.update();
@@ -503,6 +561,7 @@
       const usesCurrency = modes[mode].usesCurrency;
       inflationToggle.disabled = !usesCurrency;
       inflationLabel.classList.toggle('disabled', !usesCurrency);
+      applySize();
       setMode(mode);
     }
 
@@ -524,6 +583,8 @@
       inflationAdjusted = e.target.checked;
       render();
     });
+
+    narrowQuery.addEventListener('change', render);
 
     render();
   </script>
